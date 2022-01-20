@@ -1,0 +1,15 @@
+{
+  "name": "http-server",
+  "version": "1.0.0",
+  "description": "geekbrains lessons",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http-server"
+  },
+  "author": "kutuz00",
+  "license": "ISC"
+}
