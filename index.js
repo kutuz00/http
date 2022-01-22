@@ -2,13 +2,43 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const express = require("express");
+const cookieParser = require("cookie-parser");
 
 const network = os.networkInterfaces();
 const app = express();
 
 const port = 3000;
 
-// Route for /get endpoint. Exercise 1
+const cookieLenght = 1000 * 60 * 60 * 24 * 2;
+const user = {
+  id: 123,
+  username: "testuser",
+  password: "qwerty",
+};
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+app
+  .route("/auth")
+  .post((req, res) => {
+    if (
+      req.body.username === user.username &&
+      req.body.password === user.password
+    ) {
+      res
+        .cookie("userId", user.id, {
+          expires: new Date(Date.now() + cookieLenght),
+        })
+        .cookie("authorized", true, {
+          expires: new Date(Date.now() + cookieLenght),
+        })
+        .send("OK");
+    } else res.status(400).send("Неверный логин или пароль");
+  })
+  .all((req, res) => res.status(405).send("HTTP method not allowed"));
+
 app
   .route("/get")
   .get((req, res) => {
@@ -24,23 +54,43 @@ app
   })
   .all((req, res) => res.status(405).send("HTTP method not allowed"));
 
-//Route for delete endpoint. Exercise 2
 app
   .route("/delete")
   .delete((req, res) => {
-    res.status(200).send("success");
+    if (
+      parseInt(req.cookies.userId) === user.id &&
+      req.cookies.authorized === "true"
+    ) {
+      fs.unlink(
+        path.join(__dirname + "/files/" + req.body.filename),
+        function (err) {
+          if (err) throw err;
+          res.send(`File ${req.body.filename} is deleted!`);
+        }
+      );
+    } else console.log("fail \n ", req.cookies.authorized);
   })
   .all((req, res) => res.status(405).send("HTTP method not allowed"));
 
-//Route for post endpoint. Exercise 2
 app
   .route("/post")
   .post((req, res) => {
-    res.status(200).send("success");
+    if (
+      parseInt(req.cookies.userId) === user.id &&
+      req.cookies.authorized === "true"
+    ) {
+      fs.writeFile(
+        path.join(__dirname + "/files/" + req.body.filename),
+        req.body.content,
+        function (err) {
+          if (err) throw err;
+          res.send("Saved!");
+        }
+      );
+    } else console.log("fail \n ", req.cookies.authorized);
   })
   .all((req, res) => res.status(405).send("HTTP method not allowed"));
 
-//Route for /redirect endpoint. Exercise 3
 app
   .route("/redirect")
   .get((req, res) => {
@@ -48,7 +98,6 @@ app
   })
   .all((req, res) => res.status(405).send("HTTP method not allowed"));
 
-//Route for /redirected endpoint. Exercise 3
 app
   .route("/redirected")
   .get((req, res) => {
@@ -56,7 +105,6 @@ app
   })
   .all((req, res) => res.status(405).send("HTTP method not allowed"));
 
-//Error 404
 app.use((req, res) => res.status(404).send("Not Found!"));
 
 app.listen(port);

@@ -13,6 +13,7 @@
   "author": "kutuz00",
   "license": "ISC",
   "dependencies": {
+    "cookie-parser": "^1.4.6",
     "express": "^4.17.2"
   }
 }
