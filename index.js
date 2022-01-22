@@ -40,11 +40,19 @@ app
   })
   .all((req, res) => res.status(405).send("HTTP method not allowed"));
 
-//Route for /reditect endpoint. Exercise 3
+//Route for /redirect endpoint. Exercise 3
 app
   .route("/redirect")
   .get((req, res) => {
     res.status(308).location("/redirected");
+  })
+  .all((req, res) => res.status(405).send("HTTP method not allowed"));
+
+//Route for /redirected endpoint. Exercise 3
+app
+  .route("/redirected")
+  .get((req, res) => {
+    res.status(200).send("Redirected Location");
   })
   .all((req, res) => res.status(405).send("HTTP method not allowed"));
 
