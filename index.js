@@ -8,7 +8,6 @@ const network = os.networkInterfaces();
 const app = express();
 
 const port = 3000;
-
 const cookieLenght = 1000 * 60 * 60 * 24 * 2;
 const user = {
   id: 123,
@@ -28,6 +27,7 @@ app
       req.body.password === user.password
     ) {
       res
+        .status(200)
         .cookie("userId", user.id, {
           expires: new Date(Date.now() + cookieLenght),
         })
@@ -44,12 +44,11 @@ app
   .get((req, res) => {
     try {
       fs.readdirSync(path.join(__dirname + "/files"));
-    } catch (err) {
-      res.status(500).send("Internal server error");
-    } finally {
       res
         .status(200)
         .send(fs.readdirSync(path.join(__dirname + "/files")).join(", "));
+    } catch (err) {
+      res.status(500).send("500 - Internal server error");
     }
   })
   .all((req, res) => res.status(405).send("HTTP method not allowed"));
@@ -61,14 +60,13 @@ app
       parseInt(req.cookies.userId) === user.id &&
       req.cookies.authorized === "true"
     ) {
-      fs.unlink(
-        path.join(__dirname + "/files/" + req.body.filename),
-        function (err) {
-          if (err) throw err;
-          res.send(`File ${req.body.filename} is deleted!`);
-        }
-      );
-    } else console.log("fail \n ", req.cookies.authorized);
+      try {
+        fs.unlinkSync(path.join(__dirname + "/files/" + req.body.filename));
+        res.status(200).send(`File ${req.body.filename} is deleted!`);
+      } catch (err) {
+        throw res.status(500).type("html").send("500 - Internal server error");
+      }
+    } else res.status(401).type("html").send("401 - Not authorized!");
   })
   .all((req, res) => res.status(405).send("HTTP method not allowed"));
 
@@ -79,15 +77,16 @@ app
       parseInt(req.cookies.userId) === user.id &&
       req.cookies.authorized === "true"
     ) {
-      fs.writeFile(
-        path.join(__dirname + "/files/" + req.body.filename),
-        req.body.content,
-        function (err) {
-          if (err) throw err;
-          res.send("Saved!");
-        }
-      );
-    } else console.log("fail \n ", req.cookies.authorized);
+      try {
+        fs.writeFileSync(
+          path.join(__dirname + "/files/" + req.body.filename),
+          req.body.content
+        );
+        res.status(200).send(`File ${req.body.filename} is created!`);
+      } catch (err) {
+        throw res.status(500).type("html").send("500 - Internal server error");
+      }
+    } else res.status(401).type("html").send("401 - Not authorized!");
   })
   .all((req, res) => res.status(405).send("HTTP method not allowed"));
 
