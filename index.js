@@ -82,8 +82,11 @@ app
           path.join(__dirname + "/files/" + req.body.filename),
           req.body.content
         );
-        res.status(200).send(`File ${req.body.filename} is created!`);
+        res
+          .status(200)
+          .send(`File ${req.body.filename} with ${req.body.content} created!`);
       } catch (err) {
+        console.log(err.info);
         throw res.status(500).type("html").send("500 - Internal server error");
       }
     } else res.status(401).type("html").send("401 - Not authorized!");
@@ -101,6 +104,16 @@ app
   .route("/redirected")
   .get((req, res) => {
     res.status(200).send("Redirected Location");
+  })
+  .all((req, res) => res.status(405).send("HTTP method not allowed"));
+
+app
+  .route("/logout")
+  .get((req, res) => {
+    res
+      .clearCookie("userId", "authorized", { path: "/" })
+      .status(200)
+      .send("You have logout!");
   })
   .all((req, res) => res.status(405).send("HTTP method not allowed"));
 
